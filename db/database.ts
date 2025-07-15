@@ -2,6 +2,7 @@
 import { CupUsageHistoryWithCup } from "@/types/Cups";
 import * as SQLite from "expo-sqlite";
 import { SQLiteDatabase } from "expo-sqlite";
+import { withDbLock } from "./dbLock";
 
 // Abrir la base de datos de forma asíncrona
 export const dbPromise: Promise<SQLiteDatabase> =
@@ -74,6 +75,19 @@ export async function deleteCup(id: number) {
   await db.runAsync(`DELETE FROM cups WHERE id = ?`, [id]);
 }
 
+export async function updateCup(
+  id: number,
+  name: string,
+  imageUri: string,
+  is_favorite: number
+) {
+  const db = await dbPromise;
+  await db.runAsync(
+    `UPDATE cups SET name = ?, imageUri = ?, is_favorite = ? WHERE id = ?`,
+    [name, imageUri, is_favorite, id]
+  );
+}
+
 export async function updateCupFavorite(id: number, is_favorite: number) {
   const db = await dbPromise;
   await db.runAsync(`UPDATE cups SET is_favorite = ? WHERE id = ?`, [
@@ -106,14 +120,16 @@ export async function getUsageByMonth(
 }
 
 export async function getCupUsageHistory(): Promise<CupUsageHistoryWithCup[]> {
-  const db = await dbPromise;
+  return withDbLock(async () => {
+    const db = await dbPromise;
 
-  return db.getAllAsync<CupUsageHistoryWithCup>(`
-    SELECT h.id, h.cup_id, h.date, c.name AS cupName, c.imageUri AS cupImageUri
-    FROM cup_usage_history h
-    JOIN cups c ON c.id = h.cup_id
-    ORDER BY h.date DESC
-  `);
+    return db.getAllAsync<CupUsageHistoryWithCup>(`
+      SELECT h.id, h.cup_id, h.date, c.name AS cupName, c.imageUri AS cupImageUri
+      FROM cup_usage_history h
+      JOIN cups c ON c.id = h.cup_id
+      ORDER BY h.date DESC
+    `);
+  });
 }
 // CATEGORÍAS
 

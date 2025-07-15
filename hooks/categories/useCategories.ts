@@ -1,5 +1,5 @@
 import {
-  addCup,
+  addCategory,
   deleteCategory,
   getAllCategories,
   updateCategory,
@@ -16,7 +16,17 @@ export function useCategories() {
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: addCup,
+    mutationFn: ({
+      name,
+      is_seasonal = 0,
+      start_date,
+      end_date,
+    }: {
+      name: string;
+      is_seasonal?: number;
+      start_date?: string;
+      end_date?: string;
+    }) => addCategory(name, is_seasonal, start_date, end_date),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },

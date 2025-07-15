@@ -19,6 +19,7 @@ export default function HomeScreen() {
             onPress={() => setShowHistoryModal(true)}
           />
         )}
+
         <CupHistoryModal />
       </Suspense>
     </SafeAreaView>
